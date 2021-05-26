@@ -1,0 +1,7 @@
+#import './book.fragment.gql'
+
+mutation UpdateBook($id: ID!, $rating: Float) {
+  updateBook(input: { id: $id, rating: $rating }) {
+    ...BookFragment
+  }
+}

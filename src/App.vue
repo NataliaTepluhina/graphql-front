@@ -1,17 +1,30 @@
 <template>
   <div>
+    <div>
+      <button v-if="!showNewBookForm" @click="showNewBookForm = true">
+        Add a new book
+      </button>
+      <AddBook v-if="showNewBookForm" @closeForm="showNewBookForm = false" />
+    </div>
     <input type="text" v-model="searchTerm" />
     <p v-if="loading">Loading...</p>
     <p v-else-if="error">Something went wrong! Please try again</p>
     <template v-else>
-      <p v-for="book in books" :key="book.id">
-        {{ book.title }}
-        <button @click="activeBook = book">Edit rating</button>
-      </p>
       <p v-if="activeBook">
         Update "{{ activeBook.title }}" rating:
-        <EditRating :initial-rating="activeBook.rating" />
+        <EditRating
+          :initial-rating="activeBook.rating"
+          :book-id="activeBook.id"
+          @closeForm="activeBook = null"
+        />
       </p>
+      <template v-else>
+        <p v-for="book in books" :key="book.id">
+          <!-- Let's display rating to see what we're editing -->
+          {{ book.title }} - {{ book.rating }}
+          <button @click="activeBook = book">Edit rating</button>
+        </p>
+      </template>
     </template>
   </div>
 </template>
@@ -21,15 +34,18 @@ import { ref } from 'vue'
 import { useQuery, useResult } from '@vue/apollo-composable'
 import allBooksQuery from './graphql/allBooks.query.gql'
 import EditRating from './components/EditRating'
+import AddBook from './components/AddBook'
 
 export default {
   name: 'App',
   components: {
     EditRating,
+    AddBook,
   },
   setup() {
     const searchTerm = ref('')
     const activeBook = ref(null)
+    const showNewBookForm = ref(false)
     const { result, loading, error } = useQuery(
       allBooksQuery,
       () => ({
@@ -43,7 +59,7 @@ export default {
 
     const books = useResult(result, [], data => data.allBooks)
 
-    return { books, searchTerm, loading, error, activeBook }
+    return { books, searchTerm, loading, error, activeBook, showNewBookForm }
   },
 }
 </script>
