@@ -27,21 +27,48 @@
 
 <script>
 import { reactive } from 'vue'
+import addBookMutation from '../graphql/addBook.mutation.gql'
+import allBooksQuery from '../graphql/allBooks.query.gql'
+import { useMutation } from '@vue/apollo-composable'
+
 export default {
   emits: ['closeForm'],
-  setup(_, { emit }) {
+  props: {
+    search: {
+      type: String,
+      required: true,
+    },
+  },
+  setup(props, { emit }) {
     const newBook = reactive({
       title: '',
       author: '',
-      year: '',
-      rating: '',
+      year: null,
+      rating: null,
       description: '',
     })
 
-    const addBook = () => {
-      console.log(newBook)
-      emit('closeForm')
-    }
+    const { mutate: addBook, onDone } = useMutation(addBookMutation, () => ({
+      variables: {
+        input: newBook,
+      },
+      update(cache, response) {
+        const sourceData = cache.readQuery({
+          query: allBooksQuery,
+          variables: { search: props.search },
+        })
+        const newData = {
+          allBooks: [...sourceData.allBooks, response.data.addBook],
+        }
+        cache.writeQuery({
+          data: newData,
+          query: allBooksQuery,
+          variables: { search: props.search },
+        })
+      },
+    }))
+
+    onDone(() => emit('closeForm'))
 
     return {
       addBook,
