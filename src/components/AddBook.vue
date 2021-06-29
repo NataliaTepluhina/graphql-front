@@ -66,6 +66,13 @@ export default {
           variables: { search: props.search },
         })
       },
+      optimisticResponse: {
+        addBook: {
+          __typename: 'Book',
+          id: -1,
+          ...newBook,
+        },
+      },
     }))
 
     onDone(() => emit('closeForm'))

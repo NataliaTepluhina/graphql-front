@@ -34,11 +34,12 @@
 </template>
 
 <script>
-import { ref } from 'vue'
-import { useQuery, useResult } from '@vue/apollo-composable'
+import { ref, watch } from 'vue'
+import { useQuery, useResult, useSubscription } from '@vue/apollo-composable'
 import allBooksQuery from './graphql/allBooks.query.gql'
 import EditRating from './components/EditRating'
 import AddBook from './components/AddBook'
+import { gql } from '@apollo/client/core'
 
 export default {
   name: 'App',
@@ -59,6 +60,28 @@ export default {
         debounce: 500,
         // enabled: searchTerm.value.length > 2,
       })
+    )
+
+    const { result: subResult } = useSubscription(gql`
+      subscription bookSubscription {
+        bookSub {
+          id
+          title
+          author
+          year
+          rating
+        }
+      }
+    `)
+
+    watch(
+      subResult,
+      data => {
+        console.log('New book added:', data)
+      },
+      {
+        lazy: true, // Don't immediately execute handler
+      }
     )
 
     const books = useResult(result, [], data => data.allBooks)
