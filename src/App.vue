@@ -34,12 +34,12 @@
 </template>
 
 <script>
-import { ref, watch } from 'vue'
-import { useQuery, useResult, useSubscription } from '@vue/apollo-composable'
+import { ref } from 'vue'
+import { useQuery, useResult } from '@vue/apollo-composable'
 import allBooksQuery from './graphql/allBooks.query.gql'
-import EditRating from './components/EditRating'
-import AddBook from './components/AddBook'
-import { gql } from '@apollo/client/core'
+import EditRating from './components/EditRating.vue'
+import AddBook from './components/AddBook.vue'
+import bookSubscription from './graphql/newBook.subscription.gql'
 
 export default {
   name: 'App',
@@ -51,7 +51,7 @@ export default {
     const searchTerm = ref('')
     const activeBook = ref(null)
     const showNewBookForm = ref(false)
-    const { result, loading, error } = useQuery(
+    const { result, loading, error, subscribeToMore } = useQuery(
       allBooksQuery,
       () => ({
         search: searchTerm.value,
@@ -62,27 +62,18 @@ export default {
       })
     )
 
-    const { result: subResult } = useSubscription(gql`
-      subscription bookSubscription {
-        bookSub {
-          id
-          title
-          author
-          year
-          rating
+    subscribeToMore(() => ({
+      document: bookSubscription,
+      updateQuery(previousResult, newResult) {
+        const res = {
+          allBooks: [
+            ...previousResult.allBooks,
+            newResult.subscriptionData.data.bookSub,
+          ],
         }
-      }
-    `)
-
-    watch(
-      subResult,
-      data => {
-        console.log('New book added:', data)
+        return res
       },
-      {
-        lazy: true, // Don't immediately execute handler
-      }
-    )
+    }))
 
     const books = useResult(result, [], data => data.allBooks)
 
