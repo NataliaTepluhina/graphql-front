@@ -8,6 +8,8 @@ import {
 import { WebSocketLink } from '@apollo/client/link/ws'
 import { DefaultApolloClient } from '@vue/apollo-composable'
 import { getMainDefinition } from '@apollo/client/utilities'
+import typeDefs from './graphql/typedefs.gql'
+import favoriteBooksQuery from './graphql/favoriteBooks.query.gql'
 
 import App from './App.vue'
 
@@ -36,9 +38,24 @@ const link = split(
 
 const cache = new InMemoryCache()
 
+cache.writeQuery({
+  query: favoriteBooksQuery,
+  data: {
+    favoriteBooks: [
+      {
+        __typename: 'Book',
+        title: 'My Book',
+        id: 123,
+        rating: 5,
+      },
+    ],
+  },
+})
+
 const apolloClient = new ApolloClient({
   link,
   cache,
+  typeDefs,
 })
 
 const app = createApp({

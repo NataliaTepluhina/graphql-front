@@ -34,12 +34,13 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useQuery, useResult } from '@vue/apollo-composable'
 import allBooksQuery from './graphql/allBooks.query.gql'
 import EditRating from './components/EditRating.vue'
 import AddBook from './components/AddBook.vue'
 import bookSubscription from './graphql/newBook.subscription.gql'
+import favoriteBooksQuery from './graphql/favoriteBooks.query.gql'
 
 export default {
   name: 'App',
@@ -77,7 +78,18 @@ export default {
 
     const books = useResult(result, [], data => data.allBooks)
 
-    return { books, searchTerm, loading, error, activeBook, showNewBookForm }
+    const { result: favBooksResult } = useQuery(favoriteBooksQuery)
+    console.log(favBooksResult.value)
+
+    return {
+      books,
+      searchTerm,
+      loading,
+      error,
+      activeBook,
+      showNewBookForm,
+      favBooksResult,
+    }
   },
 }
 </script>
