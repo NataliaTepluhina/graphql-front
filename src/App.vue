@@ -1,4 +1,5 @@
 <template>
+  <!-- App.vue -->
   <div>
     <div>
       <button v-if="!showNewBookForm" @click="showNewBookForm = true">
@@ -23,11 +24,25 @@
         />
       </p>
       <template v-else>
-        <p v-for="book in books" :key="book.id">
-          <!-- Let's display rating to see what we're editing -->
-          {{ book.title }} - {{ book.rating }}
-          <button @click="activeBook = book">Edit rating</button>
-        </p>
+        <section class="list-wrapper">
+          <div class="list">
+            <h3>All Books</h3>
+            <p v-for="book in books" :key="book.id">
+              {{ book.title }} - {{ book.rating }}
+              <button @click="activeBook = book">Edit rating</button>
+              <!-- New button here -->
+              <button @click="addBookToFavorites({ book })">
+                Add to Favorites
+              </button>
+            </p>
+          </div>
+          <div class="list">
+            <h3>Favorite Books</h3>
+            <p v-for="book in favBooksResult.favoriteBooks" :key="book.id">
+              {{ book.title }}
+            </p>
+          </div>
+        </section>
       </template>
     </template>
   </div>
@@ -35,12 +50,13 @@
 
 <script>
 import { ref, watch } from 'vue'
-import { useQuery, useResult } from '@vue/apollo-composable'
+import { useQuery, useResult, useMutation } from '@vue/apollo-composable'
 import allBooksQuery from './graphql/allBooks.query.gql'
 import EditRating from './components/EditRating.vue'
 import AddBook from './components/AddBook.vue'
 import bookSubscription from './graphql/newBook.subscription.gql'
 import favoriteBooksQuery from './graphql/favoriteBooks.query.gql'
+import addBookToFavoritesMutation from './graphql/addBookToFavorites.mutation.gql'
 
 export default {
   name: 'App',
@@ -79,7 +95,10 @@ export default {
     const books = useResult(result, [], data => data.allBooks)
 
     const { result: favBooksResult } = useQuery(favoriteBooksQuery)
-    console.log(favBooksResult.value)
+
+    const { mutate: addBookToFavorites } = useMutation(
+      addBookToFavoritesMutation
+    )
 
     return {
       books,
@@ -89,6 +108,7 @@ export default {
       activeBook,
       showNewBookForm,
       favBooksResult,
+      addBookToFavorites,
     }
   },
 }
@@ -102,5 +122,15 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+
+.list-wrapper {
+  display: flex;
+  margin: 0 auto;
+  max-width: 960px;
+}
+
+.list {
+  width: 50%;
 }
 </style>
